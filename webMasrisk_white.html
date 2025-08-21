@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASRISK | Inteligencia Telco para Ventas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Dark Theme with Orange Accent -->
+    <!-- Application Structure Plan: A single-page application with a sticky top navigation for quick access to key sections (Qué es, Casos de Uso, Servicios, Roadmap, Argumentario). This structure allows the sales team to efficiently navigate the content during client presentations. Interactive filters for 'Casos de Uso' and 'Catálogo de Servicios' are implemented to quickly tailor the information to specific client needs, enhancing usability. Visual diagrams for 'Cómo Funciona' and 'Roadmap' are used to simplify complex information. -->
+    <!-- Visualization & Content Choices: Report Info -> Use Cases Table. Goal -> Enable quick filtering by vertical. Viz/Method -> Interactive cards filtered with JS. Justification -> Faster and more user-friendly than a static table for a sales context. Report Info -> Service Catalog. Goal -> Organize APIs and services. Viz/Method -> Filterable grid of cards. Justification -> Allows focusing on services relevant to a client's vertical. Report Info -> How it works flow. Goal -> Simplify process. Viz/Method -> A visually enhanced HTML/CSS flowchart with Unicode icons. Justification -> The addition of icons makes the flow more intuitive and professional. Report Info -> Roadmap. Goal -> Show future plans. Viz/Method -> A visually enhanced HTML/CSS timeline with Unicode icons. Justification -> The icons make the timeline more engaging and visually communicative. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFFFF;
+            color: #222222;
+        }
+        .accent-bg { background-color: #FF6600; }
+		.card-bg { background-color: #FFFFFF; }
+        .accent-text { color: #FF6600; }
+        .accent-border { border-color: #FF6600; }
+        .hover-accent-bg:hover { background-color: #E65C00; }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            text-align: center;
+            color: #9CA3AF;
+            max-width: 48rem;
+            margin: 0 auto 3rem auto;
+        }
+        .flow-arrow {
+            position: relative;
+            flex-grow: 1;
+            height: 2px;
+            background-color: #4B5563;
+            margin: 0 1.5rem;
+        }
+        .flow-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -0.5rem;
+            top: 50%;
+            transform: translateY(-50%) rotate(0deg);
+            color: #FF6600;
+            font-size: 2rem;
+            line-height: 1;
+            font-weight: 700;
+        }
+        @media (max-width: 767px) {
+            .flow-arrow {
+                height: 1.5rem;
+                width: 2px;
+                margin: 1.5rem 0;
+            }
+            .flow-arrow::after {
+                right: 50%;
+                top: auto;
+                bottom: -0.5rem;
+                transform: translateX(50%) rotate(90deg);
+            }
+        }
+        .filter-btn-active {
+            background-color: #FF6600 !important;
+            color: white !important;
+        }
+        .vertical-item {
+            display: flex;
+            align-items: center;
+            text-lg;
+            transition: all 0.3s ease-in-out;
+        }
+        .vertical-item:hover {
+            transform: translateX(5px);
+            color: #FF6600;
+        }
+        .vertical-icon-bg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background-color: #1F2937;
+            margin-right: 1rem;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .vertical-item:hover .vertical-icon-bg {
+            background-color: #FF6600;
+        }
+        .vertical-item:hover .vertical-icon-bg span {
+            color: white;
+        }
+
+        /* Hero section specific styles and animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 1s ease-out forwards;
+        }
+		
+		.card-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+		.card-container {
+            transform: translateY(0);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+		.filter-btn {
+            background-color: transparent;
+            color: #444444;
+            border: 1px solid #dddddd;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .filter-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .filter-btn-active {
+            background-color: #FF6600;
+            color: #ffffff;
+            border-color: #FF6600;
+            box-shadow: 0 4px 6px rgba(255,102,0,0.2);
+        }
+        .filter-btn-active:hover {
+            background-color: #E65C00;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold text-gray-900">MAS<span class="accent-text">RISK</span></a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#about" class="text-gray-600 hover:text-gray-900 transition-colors">Qué es</a>
+                <a href="#como-funciona" class="text-gray-600 hover:text-gray-900 transition-colors">Cómo Funciona</a>
+                <a href="#casos-uso" class="text-gray-600 hover:text-gray-900 transition-colors">Casos de Uso</a>
+                <a href="#servicios" class="text-gray-600 hover:text-gray-900 transition-colors">Servicios</a>
+                <a href="#roadmap" class="text-gray-600 hover:text-gray-900 transition-colors">Roadmap</a>
+                <a href="#argumentario" class="text-gray-600 hover:text-gray-900 transition-colors">Argumentario</a>
+            </div>
+            <a href="#contacto" class="hidden md:inline-block px-5 py-2 accent-bg text-white font-semibold rounded-lg hover-accent-bg transition-colors">
+                Contacto
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Section 1: Hero - Rediseñada y corregida -->
+        <section id="home" class="h-screen min-h-[600px] flex items-center justify-center text-center relative overflow-hidden">
+            <div class="relative z-10 px-4">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">MAS<span class="accent-text">RISK</span></h1>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">Inteligencia Telco para <span class="accent-text">anticiparte al fraude y al riesgo</span></h1>
+                <p class="mt-4 text-lg md:text-xl text-gray-900 max-w-3xl mx-auto">Transforma datos telco en decisiones inteligentes que protegen tus operaciones y potencian tu negocio.</p>
+                <!-- Se ha modificado esta línea para mejorar la legibilidad -->
+                <p class="mt-6 text-md max-w-2xl mx-auto">
+                    <span class="bg-black/10 p-2 rounded-md inline-block font-bold text-gray-900">MASRISK conecta APIs Telco multioperador con tus sistemas para prevenir fraude, evaluar riesgos, anticipar bajas y verificar ubicaciones, todo desde un único punto seguro y escalable.</span>
+                </p>
+                <div class="mt-8 flex justify-center space-x-4">
+                    <a href="#contacto" class="bg-orange-600 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-orange-700 transition">Solicitar demo</a>
+                    <a href="#contacto" class="bg-gray-700 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-gray-600 transition">Hablar con un experto</a>
+                </div>
+            </div>
+        </section>
+
+       <!-- Section 2: Qué es MASRISK -->
+        <section id="about" class="py-20 md:py-32 bg-gray-100">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-black">¿Qué es <span class="accent-text">MASRISK</span>?</h2>
+                    <p class="mt-4 text-lg text-gray-400 max-w-3xl mx-auto">MASRISK es el punto de encuentro entre datos telco exclusivos y capacidades analíticas avanzadas. Integra datos de APIs Open Gateway multioperador en tiempo real, normalizados y listos para usar en tus procesos críticos.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-black mb-6">Áreas de Aplicación Clave</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">🛡️</span><div><strong class="text-black">Fraude:</strong> Detección y prevención de actividades fraudulentas.</div></li>
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">📈</span><div><strong class="text-black">Riesgo:</strong> Evaluación del perfil de riesgo de un cliente.</div></li>
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">📉</span><div><strong class="text-black">Churn:</strong> Predicción de la intención de baja de un cliente.</div></li>
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">📍</span><div><strong class="text-black">Localización y Tracking:</strong> Verificación de la ubicación en tiempo real.</div></li>
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">⚡</span><div><strong class="text-black">QoD (Quality on Demand):</strong> Análisis del rendimiento de la red.</div></li>
+                            <li class="flex items-start"><span class="accent-text text-3xl mr-3">🔞</span><div><strong class="text-black">Edad y Scam Signal:</strong> Validación y detección de spam.</div></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-black mb-6">Ventajas Competitivas</h3>
+                        <div class="space-y-6">
+                            <div class="card-container bg-white p-6 rounded-xl shadow-md border border-gray-200"><h4 class="font-bold text-lg text-black mb-2"><span style="font-size: 30px">⏱️</span> Datos en Tiempo Real</h4><p>Toma decisiones instantáneas con información actualizada al minuto.</p></div>
+                            <div class="card-container bg-white p-6 rounded-xl shadow-md border border-gray-200"><h4 class="font-bold text-lg text-black mb-2"><span style="font-size: 30px">🔗</span> Integración Única</h4><p>Conecta una sola vez para acceder a múltiples APIs de diferentes operadores.</p></div>
+                            <div class="card-container bg-white p-6 rounded-xl shadow-md border border-gray-200"><h4 class="font-bold text-lg text-black mb-2"><span style="font-size: 30px">🔒</span> Cumplimiento y Privacidad</h4><p>Operaciones seguras y con total apego a la normativa vigente.</p></div>
+                            <div class="card-container bg-white p-6 rounded-xl shadow-md border border-gray-200"><h4 class="font-bold text-lg text-black mb-2"><span style="font-size: 30px">🚀</span> Escalabilidad</h4><p>Diseñado para crecer contigo, gestionando millones de transacciones.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Casos de Uso -->
+        <section id="casos-uso" class="py-20 md:py-32 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Casos de Uso</h2>
+                <p class="section-subtitle">Algunos ejemplos de cómo MASRISK protege ingresos, mejora la experiencia de cliente y asegura cumplimiento. Las posibilidades son infinitas.</p>
+               
+                <div id="use-case-filters" class="flex flex-wrap justify-center gap-2 mb-12">
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="all">Todos</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Fraude">Fraude</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Riesgo">Riesgo</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Churn">Churn</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Localización">Localización</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="QoD">QoD</button>
+                    <button class="use-case-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Edad/Scam">Edad/Scam</button>
+                </div>
+
+                <div id="use-case-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Use Case Cards will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Catálogo de Servicios -->
+        <section id="servicios" class="py-20 md:py-32">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Catálogo de Servicios y APIs</h2>
+                <p class="section-subtitle">Un conjunto completo de herramientas para construir soluciones robustas de prevención y análisis.</p>
+                <div id="service-filters" class="flex flex-wrap justify-center gap-2 mb-12">
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="all">Todos</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Fraude">Fraude</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Riesgo">Riesgo</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Localización">Localización</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Edad">Edad</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="QoD">QoD</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Scam">Scam</button>
+                    <button class="service-filter-btn filter-btn px-6 py-2 rounded-full" data-filter="Churn">Churn</button>
+                </div>
+                <div id="service-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Service Cards will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Cómo Funciona -->
+        <section id="como-funciona" class="py-20 md:py-32 bg-gray-100">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Cómo Funciona</h2>
+                <p class="section-subtitle">MASRISK actúa como un orquestador que simplifica la interacción entre tu negocio y los datos telco en tiempo real.</p>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0 text-center flex-wrap">
+                    <div class="flex flex-col items-center flow-step">
+                        <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                            <div class="text-4xl mb-2">👨‍💻</div>
+                            <p class="text-xl font-semibold text-black">Cliente</p>
+                            <p class="text-sm text-gray-400">Inicia la consulta</p>
+                        </div>
+                    </div>
+                    <div class="text-4xl accent-text font-thin mx-4 hidden md:block">→</div>
+                     <div class="flex flex-col items-center flow-step">
+                        <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                            <div class="text-4xl mb-2 accent-text">⚙️</div>
+                            <p class="text-xl font-semibold accent-text">MASRISK</p>
+                            <p class="text-sm text-gray-400">Orquesta la petición</p>
+                        </div>
+                    </div>
+                    <div class="text-4xl accent-text font-thin mx-4 hidden md:block">→</div>
+                     <div class="flex flex-col items-center flow-step">
+                        <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                            <div class="text-4xl mb-2">🔗</div>
+                            <p class="text-xl font-semibold text-black">APIs Open Gateway</p>
+                            <p class="text-sm text-gray-400">Accede a datos telco</p>
+                        </div>
+                    </div>
+                    <div class="text-4xl accent-text font-thin mx-4 hidden md:block">→</div>
+                     <div class="flex flex-col items-center flow-step">
+                        <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                            <div class="text-4xl mb-2">✨</div>
+                            <p class="text-xl font-semibold text-black">Normalización</p>
+                            <p class="text-sm text-gray-400">Unifica la data</p>
+                        </div>
+                    </div>
+                    <div class="text-4xl accent-text font-thin mx-4 hidden md:block">→</div>
+                     <div class="flex flex-col items-center flow-step">
+                        <div class="p-6 bg-green-200/50 rounded-xl shadow-lg border border-green-500 transition-transform hover:scale-105">
+                            <div class="text-4xl mb-2">✅</div>
+                            <p class="text-xl font-semibold text-green-900">Respuesta</p>
+                            <p class="text-sm text-gray-400">Entrega al cliente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+       <!-- Section 6: Roadmap -->
+        <section id="roadmap" class="py-20 section-bg">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-black">Roadmap de Producto</h2>
+                    <p class="mt-4 text-lg text-gray-600">Nuestra visión de futuro para seguir liderando la innovación telco.</p>
+                </div>
+                <div id="roadmap-timeline" class="relative">
+                    <!-- Timeline line -->
+                    <div class="timeline-line hidden md:block"></div>
+                    <!-- Timeline items -->
+                    <div class="md:flex justify-between">
+                        <!-- Q3 2025 -->
+                        <div class="timeline-item relative md:w-1/3 mb-8 md:mb-0" data-quarter="3" data-year="2025">
+                            <div class="text-center">
+                                <h3 class="text-xl font-bold accent-text">Q3 2025</h3>
+                                <div class="mt-4 card-bg p-6 rounded-lg">
+                                    <span class="text-8xl">🛡️</span>
+                                    <h4 class="text-lg font-bold mt-2 text-white">Lanzamiento MVP0 - Fraude</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Foco en APIs de SIM Swap, Number Verification, y Device Swap.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Q4 2025 -->
+                        <div class="timeline-item relative md:w-1/3 mb-8 md:mb-0" data-quarter="4" data-year="2025">
+                            <div class="text-center">
+                                <h3 class="text-xl font-bold text-gray-600">Q4 2025</h3>
+                                <div class="mt-4 card-bg p-6 rounded-lg">
+                                    <span class="text-8xl">⚖️</span>
+                                    <h4 class="text-lg font-bold mt-2 text-white">MVP1 - Riesgo</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Expansión a Riesgo y optimización del score de suscriptor.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 2026+ -->
+                        <div class="timeline-item relative md:w-1/3" data-quarter="1" data-year="2026">
+                            <div class="text-center">
+                                <h3 class="text-xl font-bold text-gray-600">2026+</h3>
+                                <div class="mt-4 card-bg p-6 rounded-lg">
+                                    <span class="text-8xl">🚀</span>
+                                    <h4 class="text-lg font-bold mt-2 text-white">Siguientes Fases</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Integración de Churn, Localización, QoD, Edad y Scam Signal.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <!-- Section 7: Argumentario Comercial -->
+        <section id="argumentario" class="py-20 md:py-32 bg-gray-100">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">Argumentario Comercial</h2>
+                <p class="section-subtitle">Las claves para posicionar MASRISK como la solución líder del mercado y resolver las dudas de tus clientes.</p>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                        <h3 class="text-5xl font-bold accent-text mb-4">⭐</h3>
+                        <h4 class="text-xl font-bold text-black mb-4">Diferenciadores</h4>
+                        <ul class="space-y-2 text-gray-400 list-disc list-inside">
+                            <li>Multioperador</li>
+                            <li>Tiempo real</li>
+                            <li>Integración única</li>
+                            <li>Cumplimiento normativo</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                        <h3 class="text-5xl font-bold accent-text mb-4">❓</h3>
+                        <h4 class="text-xl font-bold text-black mb-4">Objeciones y Respuestas</h4>
+                         <ul class="space-y-2 text-gray-400 list-disc list-inside">
+                            <li>Integración simple</li>
+                            <li>Datos 100% seguros</li>
+                            <li>Escalabilidad garantizada</li>
+                            <li>Modelo de coste flexible</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                        <h3 class="text-5xl font-bold accent-text mb-4">📈</h3>
+                        <h4 class="text-xl font-bold text-black mb-4">Beneficios</h4>
+                         <ul class="space-y-2 text-gray-400 list-disc list-inside">
+                            <li>Reducción de fraude</li>
+                            <li>Mejora de aprobación</li>
+                            <li>Retención de clientes</li>
+                            <li>Decisiones más rápidas</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-white rounded-xl shadow-lg transition-transform hover:scale-105">
+                        <h3 class="text-5xl font-bold accent-text mb-4">💬</h3>
+                        <h4 class="text-xl font-bold text-black mb-4">Pitch Rápido</h4>
+                        <p class="text-gray-500 italic">“MASRISK convierte datos telco en decisiones que protegen y hacen crecer tu negocio.”</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Contacto y Recursos -->
+        <footer id="contacto" class="py-20 section-bg">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold mb-4">Contacto y Recursos</h2>
+                <p class="text-gray-400 mb-8 max-w-2xl mx-auto">Aquí encontrarás la información para contactar al equipo de producto y los recursos clave para tus presentaciones de venta.</p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <div class="bg-gray-100 p-6 rounded-lg text-center shadow-md transition-transform hover:scale-105">
+                        <p class="text-4xl mb-2">📞</p>
+                        <h4 class="font-semibold text-lg">Contacto Interno</h4>
+                        <p class="text-gray-400">[Teléfono / Email]</p>
+                    </div>
+                     <div class="bg-gray-100 p-6 rounded-lg text-center shadow-md transition-transform hover:scale-105">
+                        <p class="text-4xl mb-2">📄</p>
+                        <h4 class="font-semibold text-lg">Documentación</h4>
+                        <a href="#" class="accent-text hover:underline">Acceder a PDFs</a>
+                    </div>
+                     <div class="bg-gray-100 p-6 rounded-lg text-center shadow-md transition-transform hover:scale-105">
+                        <p class="text-4xl mb-2">🖥️</p>
+                        <h4 class="font-semibold text-lg">Presentaciones</h4>
+                        <a href="#" class="accent-text hover:underline">Ver Slides</a>
+                    </div>
+                     <div class="bg-gray-100 p-6 rounded-lg text-center shadow-md transition-transform hover:scale-105">
+                        <p class="text-4xl mb-2">🚀</p>
+                        <h4 class="font-semibold text-lg">Demos</h4>
+                        <a href="#" class="accent-text hover:underline">Solicitar Demo</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const useCases = [
+        { vertical: 'Fraude', caso: 'Bloqueo de fraude en transacciones (Banca)', resumen: 'Verificación SIM Swap, Device Swap y titularidad antes de aprobar pagos.', apis: 'SIM Swap, Device Swap, Number Verification, KYC Match', slide: 'Chequeo telco en milisegundos antes de aprobar dinero.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' },
+        { vertical: 'Fraude', caso: 'Protección acceso banca digital', resumen: 'Bloquea accesos no autorizados tras cambios sospechosos.', apis: 'SIM Swap, Device Swap, Number Verification', slide: 'Bloquea accesos fraudulentos con señales telco.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' },
+        { vertical: 'Fraude', caso: 'Prevención fraude e-commerce', resumen: 'Validación de teléfono y dispositivo en compras online.', apis: 'SIM Swap, Device Swap, Number Verification', slide: 'Confirma que el cliente y su dispositivo son legítimos.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>' },
+        { vertical: 'Riesgo', caso: 'Mejora scoring crediticio', resumen: 'Antigüedad de línea, cambios de SIM/dispositivo, coincidencia titular.', apis: 'Number Verification, SIM Swap, Device Swap, KYC Match', slide: 'Scoring más preciso con datos telco reales.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+        { vertical: 'Riesgo', caso: 'Evaluación microcréditos', resumen: 'Aprobación/rechazo instantáneo con señales telco.', apis: 'Number Verification, SIM Swap', slide: 'Decide en segundos, reduce morosidad.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>' },
+        { vertical: 'Churn', caso: 'Predicción de bajas', resumen: 'Detectar riesgo y activar ofertas preventivas.', apis: 'Churn Prediction API', slide: 'Anticípate a las bajas y gana retención.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+        { vertical: 'Localización', caso: 'Verificación ubicación', resumen: 'Confirmar localización en operaciones críticas.', apis: 'Location Verification API', slide: 'Ubicación validada en tiempo real.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M12 22s8-4 8-10c0-4.42-3.58-8-8-8s-8 3.58-8 8c0 6 8 10 8 10z"></path><circle cx="12" cy="10" r="3"></circle></svg>' },
+        { vertical: 'Localización', caso: 'Seguimiento logístico', resumen: 'Localizar activos o vehículos.', apis: 'Location Verification API', slide: 'Sigue activos o entregas al instante.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M7 2v4"></path><path d="M17 2v4"></path><path d="M2 12h20"></path><path d="M12 6v14"></path></svg>' },
+        { vertical: 'QoD', caso: 'Verificación dispositivo', resumen: 'Confirmar calidad y autenticidad del equipo.', apis: 'QoD API', slide: 'Solo dispositivos auténticos y en buen estado.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M17 12h-2"></path><path d="M11 12H9"></path><path d="M7 12H5"></path><path d="M19 12h2"></path><path d="M14 20v2"></path><path d="M14 16v2"></path><path d="M14 14v2"></path><path d="M14 12v2"></path><path d="M14 10v2"></path><path d="M14 8v2"></path><path d="M14 6v2"></path><path d="M14 4v2"></path></svg>' },
+        { vertical: 'Edad/Scam', caso: 'Verificación edad mínima', resumen: 'Confirmar edad legal.', apis: 'Age Verification API', slide: 'Verifica edad mínima de forma instantánea.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path><path d="M12 12v6"></path><path d="M18 12H6"></path></svg>' },
+        { vertical: 'Edad/Scam', caso: 'Señales anti-scam', resumen: 'Detectar llamadas o mensajes fraudulentos.', apis: 'Scam Signal API', slide: 'Detecta señales de estafa antes de que ocurra.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 accent-text"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' },
+    ];
+
+    const services = [
+        // Servicios de Fraude
+        { name: 'SIM Swap API', description: 'Detecta cambios recientes de la tarjeta SIM, una señal clave de robo de identidad o fraude de cuentas.', vertical: 'Fraude', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M11 20A7 7 0 0 1 9.86 6.18C10.3 4.54 11.23 3.5 12 3.5c.77 0 1.7.58 2.3 2.18A7 7 0 0 1 13 20"></path><path d="M8 22v-3l1-1 3 3 1-1v3"></path><path d="M16 22v-3l-1-1-3 3-1-1v3"></path><path d="M12 18V2"></path></svg>' },
+        { name: 'Device Swap API', description: 'Identifica cambios en el dispositivo asociado a un número de teléfono, lo que ayuda a prevenir el fraude por suplantación de identidad.', vertical: 'Fraude', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M12 2v20"></path><path d="m18 16-6 6-6-6"></path><path d="m6 8 6-6 6 6"></path></svg>' },
+        { name: 'Number Verification API', description: 'Valida si un número de teléfono es válido y si ha estado activo por un tiempo significativo, proporcionando una capa extra de seguridad.', vertical: 'Fraude', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M22 11.08V12a10 10 0 1 1-5.93-8.08"></path><path d="M22 4L12 14.01l-3-3"></path></svg>' },
+        { name: 'KYC Match API', description: 'Contrasta los datos del cliente (nombre, apellido, etc.) con la información del titular de la línea para verificar la identidad y prevenir la suplantación.', vertical: 'Fraude', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+        // Servicios de Riesgo
+        { name: 'Basic Risk', description: 'Evaluación rápida de riesgo crediticio usando datos telco esenciales: antigüedad de la línea y estado. Ideal para preclasificación de clientes.', vertical: 'Riesgo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M2 13h14"></path><path d="M2 18h9"></path><path d="M2 8h20"></path></svg>' },
+        { name: 'Premium Risk', description: 'Scoring avanzado que combina datos telco con señales de cambios recientes. Proporciona una visión más precisa para decisiones de crédito.', vertical: 'Riesgo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>' },
+        { name: 'Telco Plus', description: 'Perfil de riesgo enriquecido que integra información telco con datos externos. Un análisis completo para operaciones de alto valor.', vertical: 'Riesgo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><rect width="4" height="12" x="2" y="10" rx="2"></rect><rect width="4" height="16" x="9" y="6" rx="2"></rect><rect width="4" height="20" x="16" y="2" rx="2"></rect></svg>' },
+        // Otros servicios
+        { name: 'Location Verification API', description: 'Verifica la ubicación en tiempo real del dispositivo para confirmar operaciones o cumplir con normativas de seguridad.', vertical: 'Localización', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>' },
+        { name: 'Age Verification API', description: 'Confirma la edad legal del usuario para servicios restringidos, garantizando el cumplimiento de las regulaciones.', vertical: 'Edad', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path><path d="M12 12v6"></path><path d="M18 12H6"></path></svg>' },
+        { name: 'QoD API', description: 'Verifica la calidad y el estado del dispositivo, ideal para diagnósticos o para asegurar que el equipo cumple con los estándares de la plataforma.', vertical: 'QoD', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M17 12h-2"></path><path d="M11 12H9"></path><path d="M7 12H5"></path><path d="M19 12h2"></path><path d="M14 20v2"></path><path d="M14 16v2"></path><path d="M14 14v2"></path><path d="M14 12v2"></path><path d="M14 10v2"></path><path d="M14 8v2"></path><path d="M14 6v2"></path><path d="M14 4v2"></path></svg>' },
+        { name: 'Scam Signal API', description: 'Detecta patrones sospechosos que indican llamadas o mensajes fraudulentos, protegiendo a los usuarios de estafas potenciales.', vertical: 'Scam', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' },
+        { name: 'Churn Prediction API', description: 'Utiliza datos de uso y patrones de comportamiento para predecir con alta precisión la probabilidad de que un cliente se dé de baja.', vertical: 'Churn', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 mb-4 accent-text"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' },
+    ];
+
+    const useCaseGrid = document.getElementById('use-case-grid');
+    const useCaseFilterButtons = document.querySelectorAll('.use-case-filter-btn');
+    const serviceGrid = document.getElementById('service-grid');
+    const serviceFilterButtons = document.querySelectorAll('.service-filter-btn');
+
+    function renderUseCases(filter = 'all') {
+        useCaseGrid.innerHTML = '';
+        const filteredCases = filter === 'all' ? useCases : useCases.filter(uc => uc.vertical === filter);
+       
+        filteredCases.forEach(uc => {
+            const card = document.createElement('div');
+            card.className = 'use-case-card bg-gray-100 p-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-orange-500';
+            card.innerHTML = `
+                <div class="flex items-center justify-start mb-4">
+                    <div class="mr-4">${uc.icon}</div>
+                    <div class="flex flex-col">
+                      <span class="inline-block px-3 py-1 text-xs font-semibold accent-bg text-white rounded-full mb-1">${uc.vertical}</span>
+                      <h3 class="text-xl font-bold text-black">${uc.caso}</h3>
+                    </div>
+                </div>
+                <p class="text-gray-900 mb-4">${uc.resumen}</p>
+                <div class="text-xs text-gray-500">
+                    <strong>APIs:</strong> ${uc.apis}
+                </div>
+            `;
+            useCaseGrid.appendChild(card);
+        });
+    }
+
+    function renderServices(filter = 'all') {
+        serviceGrid.innerHTML = '';
+        const filteredServices = filter === 'all' ? services : services.filter(s => s.vertical.includes(filter));
+
+        filteredServices.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'service-card bg-gray-100 p-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-orange-500';
+            card.innerHTML = `
+                <div class="flex items-center justify-start mb-4">
+                    <div class="mr-4">${s.icon}</div>
+                    <h3 class="text-xl font-bold text-black">${s.name}</h3>
+                </div>
+                <p class="text-gray-900 mb-4">${s.description}</p>
+                <div class="text-xs text-gray-500">
+                    <strong>Verticales:</strong> ${s.vertical}
+                </div>
+            `;
+            serviceGrid.appendChild(card);
+        });
+    }
+
+    useCaseFilterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            useCaseFilterButtons.forEach(btn => btn.classList.remove('filter-btn-active'));
+            button.classList.add('filter-btn-active');
+            renderUseCases(button.dataset.filter);
+        });
+    });
+
+    serviceFilterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            serviceFilterButtons.forEach(btn => btn.classList.remove('filter-btn-active'));
+            button.classList.add('filter-btn-active');
+            renderServices(button.dataset.filter);
+        });
+    });
+
+    renderUseCases();
+    renderServices();
+
+    const initialUseCaseFilterBtn = document.querySelector('.use-case-filter-btn[data-filter="all"]');
+    if (initialUseCaseFilterBtn) {
+        initialUseCaseFilterBtn.classList.add('filter-btn-active');
+    }
+    const initialServiceFilterBtn = document.querySelector('.service-filter-btn[data-filter="all"]');
+    if (initialServiceFilterBtn) {
+        initialServiceFilterBtn.classList.add('filter-btn-active');
+    }
+});
+</script>
+</body>
+</html>
